@@ -44,7 +44,7 @@ def init_qdrant():
     # qdrant_api_key = os.getenv("QDRANT_API_KEY")
     client = QdrantClient(url=st.secrets['QDRANT_URL'], api_key=st.secrets['QDRANT_API_KEY'])
     with st.chat_message("assistant"):
-        st.write(client.get_collection("iitd_chatbot").dict())
+        st.write(client.get_collections())
     collection_name = "iitd_chatbot"
     vector_store = QdrantVectorStore(
         client=client,
@@ -107,11 +107,9 @@ if prompt := st.chat_input("You: "):
                 retriever = vector_store.as_retriever(search_kwargs={"k": 5})
                 relevant_docs = retriever.invoke(prompt)
                 context = "\n\n".join([doc.page_content for doc in relevant_docs])
-            
-            formatted_prompt = rag_prompt.format(context = context, question = prompt)
-            
-
-            response = model.invoke(formatted_prompt)
+            with st.spinner("Generating response........"):
+                formatted_prompt = rag_prompt.format(context = context, question = prompt)
+                response = model.invoke(formatted_prompt)
             
             # Add assistant response to chat history
             st.session_state.messages.append({"role": "assistant", "content": response.content})
