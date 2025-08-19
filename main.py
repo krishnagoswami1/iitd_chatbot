@@ -6,6 +6,12 @@ from langchain_qdrant import QdrantVectorStore
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import Document
 from qdrant_client import QdrantClient
+import asyncio
+
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 st.set_page_config(page_title="IIT Delhi Chatbot", page_icon="🎓")
 
