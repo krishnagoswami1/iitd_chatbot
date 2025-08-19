@@ -43,6 +43,49 @@ st.sidebar.write(f"Embedding sample: {test_embedding[:5]}")
 if st.sidebar.button("🔄 Refresh Vector Store"):
     st.cache_resource.clear()
     st.rerun()
+
+
+def enhanced_search(query, vector_store, top_k=10):
+    """Enhanced search function with better debugging"""
+    try:
+        query_embedding = embeddings.embed_query(query)
+        
+        # Direct Qdrant search
+        search_results = vector_store.client.search(
+            collection_name="iitd_vector_database",
+            query_vector=query_embedding,
+            limit=top_k,
+            with_payload=True,
+            score_threshold=0.1  # Start with low threshold
+        )
+        
+        # Log all results for debugging
+        st.sidebar.write(f"Raw search returned {len(search_results)} results")
+        
+        # Filter and convert results
+        filtered_docs = []
+        for i, result in enumerate(search_results):
+            st.sidebar.write(f"Result {i}: Score {result.score:.3f}")
+            
+            # Use a more lenient threshold
+            if result.score > 0.2:  # Lower threshold than default
+                if result.payload:
+                    page_content = result.payload.get('page_content', '')
+                    metadata = result.payload.get('metadata', {})
+                    
+                    doc = Document(
+                        page_content=page_content,
+                        metadata=metadata
+                    )
+                    filtered_docs.append(doc)
+        
+        return filtered_docs
+        
+    except Exception as e:
+        st.error(f"Search error: {str(e)}")
+        return []
+
+
 @st.cache_resource
 def init_qdrant():
     # qdrant_api_key = os.getenv("QDRANT_API_KEY")
@@ -108,8 +151,8 @@ if prompt := st.chat_input("You: "):
         try:
             #Using RAG for intelligent context aware responses
             with st.spinner("Searching for relevant information...."):
-                retriever = vector_store.as_retriever(search_kwargs={"k": 10, "score_threshold": 0.3})
-                relevant_docs = retriever.invoke(prompt)
+                # retriever = vector_store.as_retriever(search_kwargs={"k": 10, "score_threshold": 0.3})
+                relevant_docs = enhanced_search(prompt, vector_store)
                 context = "\n\n".join([doc.page_content for doc in relevant_docs])
             with st.spinner("Generating response........"):
                 formatted_prompt = rag_prompt.format(context = context, question = prompt)
