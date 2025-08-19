@@ -218,11 +218,11 @@ if prompt := st.chat_input("You: "):
                 context = "\n\n".join([doc.page_content for doc in relevant_docs])
                 st.sidebar.write(f"**Final context length:** {len(context)}")
     
-    if not context.strip():
-        st.sidebar.error("❌ Final context is empty!")
-    else:
-        st.sidebar.success(f"✅ Context created: {len(context)} characters")
-                context = "\n\n".join([doc.page_content for doc in relevant_docs])
+                if not context.strip():
+                    st.sidebar.error("❌ Final context is empty!")
+                else:
+                    st.sidebar.success(f"✅ Context created: {len(context)} characters")
+                # context = "\n\n".join([doc.page_content for doc in relevant_docs])
             with st.spinner("Generating response........"):
                 formatted_prompt = rag_prompt.format(context = context, question = prompt)
                 response = model.invoke(formatted_prompt)
