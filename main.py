@@ -43,7 +43,7 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_a
 def init_qdrant():
     # qdrant_api_key = os.getenv("QDRANT_API_KEY")
     client = QdrantClient(url=st.secrets['QDRANT_URL'], api_key=st.secrets['QDRANT_API_KEY'])
-    st.write(f"collections = {client.get_collecitons()}")
+    st.title(f"collections = {client.get_collecitons()}")
     collection_name = "iitd_chatbot"
     vector_store = QdrantVectorStore(
         client=client,
