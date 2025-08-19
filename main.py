@@ -44,7 +44,7 @@ def init_qdrant():
     # qdrant_api_key = os.getenv("QDRANT_API_KEY")
     client = QdrantClient(url=st.secrets['QDRANT_URL'], api_key=st.secrets['QDRANT_API_KEY'])
     with st.chat_message("assistant"):
-        st.write(client.get_collection("iitd_chatbot").payload_schema)
+        st.write(client.get_collection("iitd_chatbot").points_count)
     collection_name = "iitd_chatbot"
     vector_store = QdrantVectorStore(
         client=client,
