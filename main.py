@@ -37,8 +37,12 @@ st.markdown("<h1 class = 'title'>🎓 IIT Delhi Chatbot</h1", unsafe_allow_html=
 # Initialize the model
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key = st.secrets['GOOGLE_API_KEY'])
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=st.secrets['GOOGLE_API_KEY'])
-
-
+test_embedding = embeddings.embed_query("IIT Delhi")
+st.sidebar.write(f"Embedding dimension: {len(test_embedding)}")
+st.sidebar.write(f"Embedding sample: {test_embedding[:5]}")
+if st.sidebar.button("🔄 Refresh Vector Store"):
+    st.cache_resource.clear()
+    st.rerun()
 @st.cache_resource
 def init_qdrant():
     # qdrant_api_key = os.getenv("QDRANT_API_KEY")
@@ -104,7 +108,7 @@ if prompt := st.chat_input("You: "):
         try:
             #Using RAG for intelligent context aware responses
             with st.spinner("Searching for relevant information...."):
-                retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+                retriever = vector_store.as_retriever(search_kwargs={"k": 10, "score_threshold": 0.3})
                 relevant_docs = retriever.invoke(prompt)
                 context = "\n\n".join([doc.page_content for doc in relevant_docs])
             with st.spinner("Generating response........"):
