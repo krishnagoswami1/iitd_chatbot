@@ -35,7 +35,7 @@ st.markdown("<h1 class = 'title'>🎓 IIT Delhi Chatbot</h1", unsafe_allow_html=
 # load_dotenv()  # Load environment variables from .env file
 
 # Initialize the model
-model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key = st.secrets['GOOGLE_API_KEY'])
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=st.secrets['GOOGLE_API_KEY'])
 
 
