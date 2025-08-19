@@ -26,18 +26,17 @@ st.markdown("""
 
 st.markdown("<h1 class = 'title'>🎓 IIT Delhi Chatbot</h1", unsafe_allow_html=True)
 
-load_dotenv()  # Load environment variables from .env file
+# load_dotenv()  # Load environment variables from .env file
 
 # Initialize the model
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=os.getenv("GOOGLE_API_KEY"))
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=st.secrets['GOOGLE_API_KEY'])
 
 
 @st.cache_resource
 def init_qdrant():
-    qdrant_url = "https://077800f7-4de6-4933-91a3-6ece80ec7259.us-east4-0.gcp.cloud.qdrant.io"
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+    # qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    client = QdrantClient(url=st.secrets['QDRANT_URL'], api_key=st.secrets['QDRANT_API_KEY'])
     collection_name = "iitd_chatbot"
     vector_store = QdrantVectorStore(
         client=client,
