@@ -84,6 +84,66 @@ def enhanced_search(query, vector_store, top_k=10):
     except Exception as e:
         st.error(f"Search error: {str(e)}")
         return []
+# Enhanced search function to debug content extraction
+def debug_document_content(query, vector_store, top_k=10):
+    """Debug what's actually in the retrieved documents"""
+    try:
+        query_embedding = embeddings.embed_query(query)
+        
+        # Direct Qdrant search
+        search_results = vector_store.client.search(
+            collection_name="iitd_vector_database",
+            query_vector=query_embedding,
+            limit=top_k,
+            with_payload=True,
+            score_threshold=0.1
+        )
+        
+        st.sidebar.write(f"Raw search returned {len(search_results)} results")
+        
+        filtered_docs = []
+        for i, result in enumerate(search_results):
+            st.sidebar.write(f"**Result {i}: Score {result.score:.3f}**")
+            
+            # DEBUG: Show the raw payload structure
+            st.sidebar.write(f"Payload keys: {list(result.payload.keys()) if result.payload else 'No payload'}")
+            
+            if result.payload:
+                # Check different possible content keys
+                possible_keys = ['page_content', 'content', 'text', 'document']
+                content = None
+                content_key = None
+                
+                for key in possible_keys:
+                    if key in result.payload:
+                        content = result.payload[key]
+                        content_key = key
+                        break
+                
+                if content:
+                    st.sidebar.write(f"Content key used: '{content_key}'")
+                    st.sidebar.write(f"Content length: {len(str(content))}")
+                    st.sidebar.write(f"Content preview: '{str(content)[:100]}...'")
+                    
+                    # Create document with correct content
+                    doc = Document(
+                        page_content=str(content),
+                        metadata=result.payload.get('metadata', {})
+                    )
+                    filtered_docs.append(doc)
+                else:
+                    st.sidebar.error(f"❌ No content found in payload keys: {list(result.payload.keys())}")
+            else:
+                st.sidebar.error(f"❌ No payload for result {i}")
+            
+            st.sidebar.write("---")
+        
+        return filtered_docs
+        
+    except Exception as e:
+        st.sidebar.error(f"Search error: {str(e)}")
+        return []
+
 
 
 @st.cache_resource
@@ -150,9 +210,18 @@ if prompt := st.chat_input("You: "):
         # Generate response
         try:
             #Using RAG for intelligent context aware responses
+            # Use this in your main chat logic instead of the current search:
             with st.spinner("Searching for relevant information...."):
-                # retriever = vector_store.as_retriever(search_kwargs={"k": 10, "score_threshold": 0.3})
-                relevant_docs = enhanced_search(prompt, vector_store)
+                relevant_docs = debug_document_content(prompt, vector_store)
+    
+    # Show final context
+                context = "\n\n".join([doc.page_content for doc in relevant_docs])
+                st.sidebar.write(f"**Final context length:** {len(context)}")
+    
+    if not context.strip():
+        st.sidebar.error("❌ Final context is empty!")
+    else:
+        st.sidebar.success(f"✅ Context created: {len(context)} characters")
                 context = "\n\n".join([doc.page_content for doc in relevant_docs])
             with st.spinner("Generating response........"):
                 formatted_prompt = rag_prompt.format(context = context, question = prompt)
